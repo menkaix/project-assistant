@@ -53,6 +53,3 @@ def get_id_token():
 
     return identity_token
 
-def say_hello():
-
-    return "MenkaIX"

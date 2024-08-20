@@ -1,5 +1,5 @@
 from flask import Flask
-import services.sercret_service as secret
+import services.requesters.hello as secret
 
 import os
 
