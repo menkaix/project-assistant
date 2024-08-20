@@ -1,11 +1,14 @@
 from flask import Flask
+import services.sercret_service as secret
+
 import os
+
 
 app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return 'Hello, Flask!'
+    return 'Hello, '+secret.say_hello() + '!' 
 
 
 
