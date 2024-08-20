@@ -1,11 +1,14 @@
 from flask import Flask
+import services.requesters.hello as hellow
+
 import os
+
 
 app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return 'Hello, Flask!'
+    return 'Hello, '+hellow.getRoot() + '!' 
 
 
 
