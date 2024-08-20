@@ -1,5 +1,5 @@
 from flask import Flask
-import services.requesters.hello as secret
+import services.requesters.hello as hellow
 
 import os
 
@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 @app.route('/')
 def hello():
-    return 'Hello, '+secret.say_hello() + '!' 
+    return 'Hello, '+hellow.getRoot() + '!' 
 
 
 
