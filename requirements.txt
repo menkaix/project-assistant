@@ -1,4 +1,7 @@
 Flask
 google-cloud-secret-manager
 google-auth
+google-cloud
+google-cloud-storage
 requests
+vertexai
