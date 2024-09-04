@@ -1,16 +1,21 @@
 from flask import Flask, request
-import services.business.read_pdf_assist as hellow
+from flask_cors import CORS, cross_origin
 
+import services.business.read_pdf_assist as hellow
 import os
 
 
 app = Flask(__name__)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 @app.route('/')
+@cross_origin()
 def hello():
     return 'Hello!'
 
 @app.route('/answer',  methods=['POST'])
+@cross_origin()
 def answer_about():
 
     request_data = request.get_json()
