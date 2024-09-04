@@ -12,14 +12,11 @@ def access_pdf(path_in_bucket, prompt):
 
     model = GenerativeModel("gemini-1.5-flash-001")
 
-    #data = gs.read_binary(os.getenv("BUCKET_NAME"), "groupe_bovis/CDC-TMS.pdf")
     data = gs.read_binary(os.getenv("BUCKET_NAME"), path_in_bucket)
-
     pdf_file = Part.from_data(data, mime_type="application/pdf")
+
     contents = [pdf_file, prompt]
+
     response = model.generate_content(contents)
-
-
-    #data = gs.gs_read_binary("gs://hypermanager_project_data/groupe_bovis/CDC-TMS.pdf")
 
     return response.text
