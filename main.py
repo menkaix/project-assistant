@@ -11,8 +11,9 @@ app = Flask(__name__)
 def hello():
     return 'Hello!'
 
-@headers({'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': '*'})
+
 @app.route('/answer',  methods=['POST'])
+@headers({'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': '*'})
 def answer_about():
 
     request_data = request.get_json()
