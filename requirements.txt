@@ -1,5 +1,6 @@
 Flask
 flask-cors
+flask-headers
 google-cloud-secret-manager
 google-auth
 google-cloud
