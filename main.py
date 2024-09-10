@@ -12,7 +12,7 @@ def hello():
     return 'Hello!'
 
 
-@app.route('/answer',  methods=['POST'])
+@app.route('/answer',  methods=['GET','POST','OPTIONS'])
 @headers({'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': '*'})
 def answer_about():
 
