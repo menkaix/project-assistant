@@ -1,11 +1,14 @@
 from flask import Flask, request
 from flask_headers import headers
+from flask_cors import CORS
 
 import services.business.read_pdf_assist as hellow
 import os
 
 
 app = Flask(__name__)
+CORS(app)
+
 
 @app.route('/')
 def hello():
@@ -13,7 +16,7 @@ def hello():
 
 
 @app.route('/answer',  methods=['GET','POST','OPTIONS'])
-@headers({'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': '*'})
+#@headers({'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': '*'})
 def answer_about():
 
     request_data = request.get_json()
