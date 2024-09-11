@@ -15,8 +15,9 @@ def hello():
     return 'Hello!'
 
 
-@app.route('/answer',  methods=['GET','POST','OPTIONS'])
+@app.route('/answer',  methods=['GET','POST','OPTIONS'], )
 #@headers({'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': '*'})
+@headers({'Content-type':'text/plain'})
 def answer_about():
 
     request_data = request.get_json()
