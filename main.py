@@ -27,5 +27,35 @@ def answer_about():
 
     return hellow.access_pdf(path, history, prompt)
 
+@app.route('/discuss',  methods=['GET','POST','OPTIONS'], )
+#@headers({'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': '*'})
+@headers({'Content-type':'application/json'})
+def discuss_about():
+
+    request_data = request.get_json()
+    path = request_data['path']
+    prompt = request_data['prompt']
+    history = request_data['history']
+
+    message_prompt = {}
+    message_prompt['role'] = 'user'
+    message_prompt['content'] = prompt
+
+    message = {}
+    message['role'] = 'gemini'
+    message['content'] = hellow.access_pdf(path, history, prompt)
+
+    history.append(message_prompt)
+    history.append(message)
+
+    response = {}
+    response['history'] = history
+    response['message'] = message
+
+    return response
+
+
+
+
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=os.environ.get('FLASK_PORT', 5000), debug=os.environ.get('FLASK_DEBUG', True))
