@@ -4,7 +4,7 @@ import vertexai
 import json
 from vertexai.generative_models import GenerativeModel, Part
 
-def access_pdf(path_in_bucket, prompt, history):
+def access_pdf(path_in_bucket, history, prompt):
 
     # TODO(developer): Update and un-comment below lines
     project_id = os.getenv('PROJECT_NAME')
