@@ -24,16 +24,9 @@ def answer_about():
     
     prompt = request_data['prompt']
 
-    if(request_data['path'] == None):
-        path = ""
-    else:   
-        path = request_data['path']
+    path = request_data.get('path', "") 
+    history = request_data.get('history', [])
 
-    
-    if(request_data['history'] == None):
-        history = []
-    else:   
-        history = request_data['history']
 
     return hellow.access_pdf(path, history, prompt)
 
@@ -46,33 +39,19 @@ def discuss_about():
     
     prompt = request_data['prompt']
 
-    if(request_data['path'] == None):
-        path = ""
-    else:   
-        path = request_data['path']
+    path = request_data.get('path', "") 
+    history = request_data.get('history', [])
 
 
-    if(request_data['history'] == None):
-        history = []
-    else:   
-        history = request_data['history']
+    result = hellow.chat_with_llm(path, history, prompt)
 
-    message_prompt = {}
-    message_prompt['role'] = 'user'
-    message_prompt['content'] = prompt
+    if result.get("error"):
+        return {"error": result["error"]}, 500  # Return an error response
 
-    message = {}
-    message['role'] = 'gemini'
-    message['content'] = hellow.access_pdf(path, history, prompt)
-
-    history.append(message_prompt)
-    history.append(message)
-
-    response = {}
-    response['history'] = history
-    response['message'] = message
-
-    return response
+    return {
+        "history": result["history"],
+        "message": result["message"],
+    }
 
 
 
