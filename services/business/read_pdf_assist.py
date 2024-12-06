@@ -4,7 +4,7 @@ import vertexai
 import json
 from vertexai.generative_models import GenerativeModel, Part
 
-def access_pdf(path_in_bucket, history, prompt):
+def access_pdf(path_in_bucket, prompt):
 
     # TODO(developer): Update and un-comment below lines
     project_id = os.getenv('PROJECT_NAME')
@@ -15,15 +15,10 @@ def access_pdf(path_in_bucket, history, prompt):
     if path_in_bucket != "":
         data = gs.read_binary(os.getenv("BUCKET_NAME"), path_in_bucket)
         pdf_file = Part.from_data(data, mime_type="application/pdf")
-        if history :
-            contents = [pdf_file, json.dumps(history), prompt]
-        else:
-            contents = [pdf_file, prompt]
+        
+        contents = [pdf_file, prompt]
     else:
-        if history :
-            contents = [json.dumps(history), prompt]
-        else:
-            contents = [prompt]
+        contents = [prompt]
     
 
     response = model.generate_content(contents)
