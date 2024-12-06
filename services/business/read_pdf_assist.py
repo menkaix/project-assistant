@@ -48,10 +48,13 @@ def chat_with_llm(path_in_bucket, chat_history, user_message):
         - "error": An error message if something went wrong, or None if successful.
 
     """
+
+    project_id = os.getenv('PROJECT_NAME')
+    bucket_name = os.getenv("BUCKET_NAME")
+
     try:
 
-        project_id = os.getenv('PROJECT_NAME')
-        bucket_name = os.getenv("BUCKET_NAME")
+        
 
         vertexai.init(project=project_id, location="europe-west1")  # Assuming Europe-West1
         model = GenerativeModel("gemini-1.5-flash-001")

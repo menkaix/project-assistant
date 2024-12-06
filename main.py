@@ -63,7 +63,7 @@ def discuss_about():
 
     message = {}
     message['role'] = 'gemini'
-    message['content'] = hellow.chat_with_llm(path, history, prompt)
+    message['content'] = hellow.access_pdf(path, history, prompt)
 
     history.append(message_prompt)
     history.append(message)
