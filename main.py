@@ -21,9 +21,19 @@ def hello():
 def answer_about():
 
     request_data = request.get_json()
-    path = request_data['path']
+    
     prompt = request_data['prompt']
-    history = request_data['history']
+
+    if(request_data['path'] == None):
+        path = ""
+    else:   
+        path = request_data['path']
+
+    
+    if(request_data['history'] == None):
+        history = []
+    else:   
+        history = request_data['history']
 
     return hellow.access_pdf(path, history, prompt)
 
@@ -33,9 +43,19 @@ def answer_about():
 def discuss_about():
 
     request_data = request.get_json()
-    path = request_data['path']
+    
     prompt = request_data['prompt']
-    history = request_data['history']
+
+    if(request_data['path'] == None):
+        path = ""
+    else:   
+        path = request_data['path']
+
+
+    if(request_data['history'] == None):
+        history = []
+    else:   
+        history = request_data['history']
 
     message_prompt = {}
     message_prompt['role'] = 'user'
