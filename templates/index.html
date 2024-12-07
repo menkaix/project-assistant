@@ -67,7 +67,13 @@
 
         if (typeof message === 'object' && message !== null) {
             const formattedContent = marked.parse(message.content); // Use marked.js to parse markdown
-            messageDiv.innerHTML = `${message.role}: ${formattedContent}`; // Set as innerHTML for rendered markdown
+
+            // Decode Unicode characters
+            const decodedContent = formattedContent.replace(/\\u([\d\w]{4})/gi, (match, grp) => {
+                return String.fromCharCode(parseInt(grp, 16));
+            });
+
+            messageDiv.innerHTML = `${message.role}: ${decodedContent}`; // Set as innerHTML for rendered markdown
 
         } else {
             messageDiv.textContent = message; 
