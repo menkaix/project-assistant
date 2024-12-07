@@ -46,13 +46,16 @@ def chat_with_llm(path_in_bucket, chat_history, user_message):
 
     project_id = os.getenv('PROJECT_NAME')
     bucket_name = os.getenv("BUCKET_NAME")
+    model_name = "gemini-1.5-flash-001"
+    system_instructions = """
+        Tu es un assistant Business Analyst, ton role est d'expliquer les besoins métiers, les besoins utilisateurs et les éléments techniques de façon claire et concise.
+    """
+    
 
     try:
 
-        
-
         vertexai.init(project=project_id, location="europe-west1")  # Assuming Europe-West1
-        model = GenerativeModel("gemini-1.5-flash-001")
+        model = GenerativeModel(model_name, system_instruction=system_instructions)
 
         contents = []
 
