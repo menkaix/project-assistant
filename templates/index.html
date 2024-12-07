@@ -2,96 +2,76 @@
 <html>
 <head>
     <title>Chat with LLM</title>
-    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script> 
-    <style>
-        /* Basic styling for the chat interface */
-        #chat-container {
-            width: 500px;
-            margin: 0 auto;
-            border: 1px solid #ccc;
-            padding: 10px;
-        }
-        #chat-history {
-            height: 300px;
-            overflow-y: scroll;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 10px;
-        }
-        .message {
-            margin-bottom: 5px;
-        }
-        .user-message {
-            text-align: right;
-        }
-        .bot-message {
-            text-align: left;
-        }
-
-    </style>
-
-</head>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script> 
+</head> 
+    
 <body>
-
-
-<input type="text" id="fileInput">
-
 <div id="chat-container">
+    <input type="text" id="gcs-path-input" placeholder="Enter Google Cloud Storage path..."> <button id="set-gcs-path">Set Path</button><br><br>
     <div id="chat-history"></div>
     <input type="text" id="user-input" placeholder="Type your message...">
     <button id="send-button">Send</button>
 </div>
-
-
+<script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-    const chatHistory = document.getElementById('chat-history');
+       const chatHistory = document.getElementById('chat-history');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
-    const fileInput = document.getElementById('fileInput');
+    const gcsPathInput = document.getElementById('gcs-path-input');
+    const setGcsPathButton = document.getElementById('set-gcs-path');
 
-    let chatHistoryArray = [];  // Store the conversation history
+    let chatHistoryArray = [];
+    let gcsPath = ''; // Store the GCS path
 
-    fileInput.addEventListener('change', (event) => {
-        const file = event.target.files[0];
-        // Handle file upload if needed. You might want to send it to your backend.
-        console.log('File selected:', file.name)
+    setGcsPathButton.addEventListener('click', () => {
+        gcsPath = gcsPathInput.value;
+        console.log("GCS Path set to:", gcsPath); // Log the path for now  You'll use this in your /discuss route
+        // Optionally, provide feedback to the user, e.g., alert("GCS path set!");
     });
-
 
 
     sendButton.addEventListener('click', () => {
         const userMessage = userInput.value;
         appendMessage('user', userMessage);
 
-        //prepare path for request
-        const filePath = fileInput.files.length > 0 ? fileInput.files[0].name : '';
-
 
         axios.post('/discuss', {
             prompt: userMessage,
-            path: filePath,
-            history: chatHistoryArray, // Include the history in the request
+            history: chatHistoryArray,
+            path: gcsPath // Send the GCS path to the backend
         })
         .then(response => {
             const botMessage = response.data.message;
-            chatHistoryArray = response.data.history; // Update history with server's response
+            chatHistoryArray = response.data.history;
             appendMessage('bot', botMessage);
 
         })
         .catch(error => {
             console.error('Error:', error);
-            appendMessage('bot', 'An error occurred. Please try again later.'); //handle errors
+            appendMessage('bot', 'An error occurred. Please try again later.');
         });
-
-
         userInput.value = '';
     });
+
 
     function appendMessage(sender, message) {
         const messageDiv = document.createElement('div');
         messageDiv.classList.add('message', `${sender}-message`);
-        messageDiv.textContent = message;
+
+        if (typeof message === 'object' && message !== null) {
+            const formattedContent = marked.parse(message.content); // Use marked.js to parse markdown
+            messageDiv.innerHTML = `${message.role}: ${formattedContent}`; // Set as innerHTML for rendered markdown
+
+        } else {
+            messageDiv.textContent = message; 
+        }
+
+        if (sender === 'user') {
+        messageDiv.style.color = 'blue'; // Make user messages blue
+    }
+
         chatHistory.appendChild(messageDiv);
-        chatHistory.scrollTop = chatHistory.scrollHeight; // Scroll to bottom
+        chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
 </script>
