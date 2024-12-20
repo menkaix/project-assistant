@@ -1,4 +1,7 @@
 from google.cloud import storage
+import logging
+
+logging.basicConfig(level=logging.INFO)
 
 def read_binary(bucket_name, blob_name):
     """Write and read a blob from GCS using file-like IO"""
@@ -8,16 +11,14 @@ def read_binary(bucket_name, blob_name):
     # The ID of your new GCS object
     # blob_name = "storage-object-name"
 
-    storage_client = storage.Client()
-    
-    bucket = storage_client.bucket(bucket_name)
-    blob = bucket.blob(blob_name)
+    try:
+        storage_client = storage.Client()
+        bucket = storage_client.bucket(bucket_name)
+        blob = bucket.blob(blob_name)
 
-    # # Mode can be specified as wb/rb for bytes mode.
-    # # See: https://docs.python.org/3/library/io.html
-    # with blob.open("w") as f:
-    #     f.write("Hello world")
-
-    with blob.open("rb") as f:
-        return f.read()
+        with blob.open("rb") as f:
+            return f.read()
+    except Exception as e:
+        logging.error(f"Failed to read binary data from {bucket_name}/{blob_name}: {e}")
+        raise
 

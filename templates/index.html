@@ -21,7 +21,7 @@
 </div>
 <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
 <script>
-       const chatHistory = document.getElementById('chat-history');
+    const chatHistory = document.getElementById('chat-history');
     const userInput = document.getElementById('user-input');
     const sendButton = document.getElementById('send-button');
     const gcsPathInput = document.getElementById('gcs-path-input');
@@ -31,72 +31,91 @@
     let gcsPath = ''; // Store the GCS path
 
     setGcsPathButton.addEventListener('click', () => {
-        gcsPath = gcsPathInput.value;
-        console.log("GCS Path set to:", gcsPath); // Log the path for now  You'll use this in your /discuss route
-        // Optionally, provide feedback to the user, e.g., alert("GCS path set!");
+        try {
+            gcsPath = gcsPathInput.value.trim();
+            console.log("GCS Path set to:", gcsPath);
+        } catch (error) {
+            console.error('Error setting GCS path:', error);
+        }
     });
 
-
-    sendButton.addEventListener('click', () => {
-        const userMessage = userInput.value;
-        appendMessage('user', userMessage);
-
-
-        axios.post('/discuss', {
-            prompt: userMessage,
-            history: chatHistoryArray,
-            path: gcsPath // Send the GCS path to the backend
-        })
-        .then(response => {
-            const botMessage = response.data.message;
-            chatHistoryArray = response.data.history;
-            appendMessage('bot', botMessage);
-
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            appendMessage('bot', 'An error occurred. Please try again later.');
-        });
-        userInput.value = '';
+    gcsPathInput.addEventListener('input', () => {
+        try {
+            gcsPath = gcsPathInput.value.trim();
+            console.log("GCS Path set to:", gcsPath);
+        } catch (error) {
+            console.error('Error setting GCS path:', error);
+        }
     });
 
+    sendButton.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (event) => {
+        if (event.key === 'Enter') {
+            sendMessage();
+        }
+    });
 
-    function appendMessage(sender, message) {
-        const messageDiv = document.createElement('div');
-        messageDiv.classList.add('message', `${sender}-message`);
+    function sendMessage() {
+        try {
+            const userMessage = userInput.value;
+            appendMessage('user', userMessage);
 
-        if (typeof message === 'object' && message !== null) {
-            const formattedContent = marked.parse(message.content); // Use marked.js to parse markdown
-
-            // Decode Unicode characters
-            const decodedContent = formattedContent.replace(/\\u([\d\w]{4})/gi, (match, grp) => {
-                return String.fromCharCode(parseInt(grp, 16));
+            axios.post('/discuss', {
+                prompt: userMessage,
+                history: chatHistoryArray,
+                path: gcsPath
+            })
+            .then(response => {
+                const botMessage = response.data.message;
+                chatHistoryArray = response.data.history;
+                appendMessage('bot', botMessage);
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                appendMessage('bot', 'An error occurred. Please try again later.');
             });
-
-            messageDiv.innerHTML = `${message.role}: ${decodedContent}`; // Set as innerHTML for rendered markdown
-
-        } else {
-            messageDiv.textContent = message; 
+            userInput.value = '';
+        } catch (error) {
+            console.error('Error sending message:', error);
+            appendMessage('bot', 'An unexpected error occurred. Please try again later.');
         }
-
-        if (sender === 'user') {
-            messageDiv.style.color = '#2196f3'; // Material Design Blue
-            messageDiv.style.textAlign = 'right'; // Align user messages to the right
-            messageDiv.style.backgroundColor = '#e3f2fd';
-            messageDiv.style.padding = '8px 16px';
-            messageDiv.style.borderRadius = '4px';
-            messageDiv.style.marginBottom = '8px';
-        } else {  // Bot message styling
-            messageDiv.style.backgroundColor = '#f5f5f5'; // Light gray background
-            messageDiv.style.padding = '8px 16px';
-            messageDiv.style.borderRadius = '4px';
-            messageDiv.style.marginBottom = '8px';
-        }
-    
-        chatHistory.appendChild(messageDiv);
-        chatHistory.scrollTop = chatHistory.scrollHeight;
     }
 
+    function appendMessage(sender, message) {
+        try {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', `${sender}-message`);
+
+            if (typeof message === 'object' && message !== null) {
+                const formattedContent = marked.parse(message.content);
+                const decodedContent = formattedContent.replace(/\\u([\d\w]{4})/gi, (match, grp) => {
+                    return String.fromCharCode(parseInt(grp, 16));
+                });
+                messageDiv.innerHTML = `${message.role}: ${decodedContent}`;
+            } else {
+                messageDiv.textContent = message; 
+            }
+
+            if (sender === 'user') {
+                messageDiv.style.color = '#2196f3';
+                messageDiv.style.textAlign = 'right';
+                messageDiv.style.backgroundColor = '#e3f2fd';
+                messageDiv.style.padding = '8px 16px';
+                messageDiv.style.borderRadius = '4px';
+                messageDiv.style.marginBottom = '8px';
+            } else {
+                messageDiv.style.backgroundColor = '#f5f5f5';
+                messageDiv.style.padding = '8px 16px';
+                messageDiv.style.borderRadius = '4px';
+                messageDiv.style.marginBottom = '8px';
+            }
+
+            chatHistory.appendChild(messageDiv);
+            chatHistory.scrollTop = chatHistory.scrollHeight;
+        } catch (error) {
+            console.error('Error appending message:', error);
+        }
+    }
 </script>
 
 </body>

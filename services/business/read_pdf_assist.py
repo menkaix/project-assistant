@@ -2,28 +2,31 @@ import services.requesters.google_cloud_storage as gs
 import os
 import vertexai
 import json
+import logging
 from vertexai.generative_models import GenerativeModel, Part
 
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
+
 def access_pdf(path_in_bucket, prompt):
-
-    # TODO(developer): Update and un-comment below lines
-    project_id = os.getenv('PROJECT_NAME')
-
-    vertexai.init(project=project_id, location="europe-west1")
-
-    model = GenerativeModel("gemini-1.5-flash-001")
-    if path_in_bucket != "":
-        data = gs.read_binary(os.getenv("BUCKET_NAME"), path_in_bucket)
-        pdf_file = Part.from_data(data, mime_type="application/pdf")
+    try:
+        project_id = os.getenv('PROJECT_NAME')
+        vertexai.init(project=project_id, location="europe-west1")
+        model = GenerativeModel("gemini-1.5-flash-001")
         
-        contents = [pdf_file, prompt]
-    else:
-        contents = [prompt]
-    
-
-    response = model.generate_content(contents)
-
-    return response.text
+        if path_in_bucket != "":
+            data = gs.read_binary(os.getenv("BUCKET_NAME"), path_in_bucket)
+            pdf_file = Part.from_data(data, mime_type="application/pdf")
+            contents = [pdf_file, prompt]
+        else:
+            contents = [prompt]
+        
+        response = model.generate_content(contents)
+        return response.text
+    except Exception as e:
+        logger.error(f"Error in access_pdf: {e}")
+        return {"error": f"An error occurred: {e}"}
 
 def chat_with_llm(path_in_bucket, chat_history, user_message):
     """
@@ -51,28 +54,24 @@ def chat_with_llm(path_in_bucket, chat_history, user_message):
         Tu es un assistant Business Analyst, ton role est d'expliquer les besoins métiers, les besoins utilisateurs et les éléments techniques de façon claire et concise.
     """
     
-
     try:
-
-        vertexai.init(project=project_id, location="europe-west1")  # Assuming Europe-West1
+        vertexai.init(project=project_id, location="europe-west1")
         model = GenerativeModel(model_name, system_instruction=system_instructions)
-
         contents = []
 
-        if path_in_bucket:  # Handles both "" and None
+        if path_in_bucket:
             try:
                 data = gs.read_binary(bucket_name, path_in_bucket)
                 pdf_file = Part.from_data(data, mime_type="application/pdf")
                 contents.append(pdf_file)
             except Exception as e:
+                logger.error(f"Error reading PDF: {e}")
                 return {"error": f"Error reading PDF: {e}"}
-
 
         if chat_history:
             contents.append(json.dumps(chat_history))
 
         contents.append(user_message)
-
         response = model.generate_content(contents)
 
         assistant_message = {
@@ -83,7 +82,6 @@ def chat_with_llm(path_in_bucket, chat_history, user_message):
         chat_history.append({"role": "user", "content": user_message})
         chat_history.append(assistant_message)
 
-
         return {
             "history": chat_history,
             "message": assistant_message,
@@ -91,6 +89,7 @@ def chat_with_llm(path_in_bucket, chat_history, user_message):
         }
 
     except Exception as e:
+        logger.error(f"An error occurred in chat_with_llm: {e}")
         return {"error": f"An error occurred: {e}"}
 
 
