@@ -162,3 +162,5 @@ cython_debug/
 #.idea/
 .idx/
 .vscode/
+apidef.yml
+project-assistant-complete.yml
