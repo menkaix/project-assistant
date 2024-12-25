@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, send_from_directory # Import 
 from flask_headers import headers
 from flask_cors import CORS
 
-import services.business.read_pdf_assist as hellow
+import services.business.document_assist as document_assist
 import os
 
 
@@ -11,7 +11,7 @@ CORS(app)
 
 
 @app.route('/')
-def hello():
+def home():
     return render_template('index.html')  # Render the index.html template
 
 
@@ -20,32 +20,32 @@ def hello():
 @app.route('/answer',  methods=['GET','POST','OPTIONS'], )
 #@headers({'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': '*'})
 @headers({'Content-type':'text/plain'})
-def answer_about():
+def get_answer():
 
     request_data = request.get_json()
     
-    prompt = request_data['prompt']
+    user_prompt = request_data['prompt']
 
-    path = request_data.get('path', "") 
-    history = request_data.get('history', [])
+    file_path = request_data.get('path', "") 
+    chat_history = request_data.get('history', [])
 
 
-    return hellow.access_pdf(path, prompt)
+    return document_assist.access_file(file_path, user_prompt)
 
 @app.route('/discuss',  methods=['GET','POST','OPTIONS'], )
 #@headers({'Access-Control-Allow-Headers': '*', 'Access-Control-Allow-Origin': '*', 'Access-Control-Allow-Methods': '*'})
 @headers({'Content-type':'application/json'})
-def discuss_about():
+def discuss():
 
     request_data = request.get_json()
     
-    prompt = request_data['prompt']
+    user_prompt = request_data['prompt']
 
-    path = request_data.get('path', "") 
-    history = request_data.get('history', [])
+    file_path = request_data.get('path', "") 
+    chat_history = request_data.get('history', [])
 
 
-    result = hellow.chat_with_llm(path, history, prompt)
+    result = document_assist.chat_with_llm(file_path, chat_history, user_prompt)
 
     if result.get("error"):
         return {"error": result["error"]}, 500  # Return an error response

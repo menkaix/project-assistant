@@ -4,38 +4,60 @@ import vertexai
 import json
 import logging
 from vertexai.generative_models import GenerativeModel, Part
+from mimetypes import guess_type
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-def access_pdf(path_in_bucket, prompt):
+def get_file_content(bucket_name, file_path):
+    # ...existing code...
+    try:
+        data = gs.read_binary(bucket_name, file_path)
+        mime_type, _ = guess_type(file_path)
+        
+        if mime_type in ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+            return Part.from_data(data, mime_type=mime_type)
+        elif mime_type == "application/json":
+            json_data = json.loads(data)
+            return json.dumps(json_data, indent=2)
+        elif mime_type in ["application/xml", "text/xml"]:
+            return data.decode('utf-8')
+        elif mime_type in ["image/png", "image/jpeg", "image/gif"]:
+            return Part.from_data(data, mime_type=mime_type)
+        else:
+            return data.decode('utf-8')
+    except Exception as e:
+        logger.error(f"Error reading file: {e}")
+        raise
+
+def access_file(file_path, prompt):
+    # ...existing code...
     try:
         project_id = os.getenv('PROJECT_NAME')
         vertexai.init(project=project_id, location="europe-west1")
         model = GenerativeModel("gemini-1.5-flash-001")
         
-        if path_in_bucket != "":
-            data = gs.read_binary(os.getenv("BUCKET_NAME"), path_in_bucket)
-            pdf_file = Part.from_data(data, mime_type="application/pdf")
-            contents = [pdf_file, prompt]
+        if file_path:
+            contents = [get_file_content(os.getenv("BUCKET_NAME"), file_path), prompt]
         else:
             contents = [prompt]
         
         response = model.generate_content(contents)
         return response.text
     except Exception as e:
-        logger.error(f"Error in access_pdf: {e}")
+        logger.error(f"Error in access_file: {e}")
         return {"error": f"An error occurred: {e}"}
 
-def chat_with_llm(path_in_bucket, chat_history, user_message):
+def chat_with_llm(file_path, chat_history, user_message):
+    # ...existing code...
     """
     Chats with a Large Language Model (LLM), optionally including a PDF context.
 
     Args:
         project_id: The Google Cloud project ID.
         bucket_name: The name of the Google Cloud Storage bucket (if using a PDF).
-        path_in_bucket: The path to the PDF file within the bucket (can be "" or None if no PDF).
+        file_path: The path to the PDF file within the bucket (can be "" or None if no PDF).
         chat_history: A list of dictionaries representing the chat history. Each dictionary should have "role" (user, assistant) and "content" keys.
         user_message: The current user's message.
 
@@ -51,7 +73,7 @@ def chat_with_llm(path_in_bucket, chat_history, user_message):
     bucket_name = os.getenv("BUCKET_NAME")
     model_name = "gemini-1.5-flash-001"
     system_instructions = """
-        Tu es un assistant Business Analyst, ton role est d'expliquer les besoins métiers, les besoins utilisateurs et les éléments techniques de façon claire et concise.
+        Tu es un assistant Business Analyst, ton rôle est d'expliquer les besoins métiers, les besoins utilisateurs et les éléments techniques de façon claire et concise.
     """
     
     try:
@@ -59,14 +81,11 @@ def chat_with_llm(path_in_bucket, chat_history, user_message):
         model = GenerativeModel(model_name, system_instruction=system_instructions)
         contents = []
 
-        if path_in_bucket:
+        if file_path:
             try:
-                data = gs.read_binary(bucket_name, path_in_bucket)
-                pdf_file = Part.from_data(data, mime_type="application/pdf")
-                contents.append(pdf_file)
+                contents.append(get_file_content(bucket_name, file_path))
             except Exception as e:
-                logger.error(f"Error reading PDF: {e}")
-                return {"error": f"Error reading PDF: {e}"}
+                return {"error": f"Error reading file: {e}"}
 
         if chat_history:
             contents.append(json.dumps(chat_history))
@@ -91,5 +110,3 @@ def chat_with_llm(path_in_bucket, chat_history, user_message):
     except Exception as e:
         logger.error(f"An error occurred in chat_with_llm: {e}")
         return {"error": f"An error occurred: {e}"}
-
-
