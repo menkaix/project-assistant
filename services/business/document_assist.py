@@ -5,13 +5,14 @@ import json
 import logging
 from vertexai.generative_models import GenerativeModel, Part
 from mimetypes import guess_type
+import services.requesters.consume_backlog_api as backlog_api
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_file_content(bucket_name, file_path):
-    # ...existing code...
+    
     try:
         data = gs.read_binary(bucket_name, file_path)
         mime_type, _ = guess_type(file_path)
@@ -31,12 +32,49 @@ def get_file_content(bucket_name, file_path):
         logger.error(f"Error reading file: {e}")
         raise
 
+def configure_model():
+    # array of functions to be used in the model
+    function_tools = [
+        backlog_api.create_diagram,
+        backlog_api.get_list_diagrams,
+        backlog_api.update_diagram_graphic,
+        backlog_api.update_diagram,
+        backlog_api.get_png_diagram,
+        backlog_api.get_plant_url_diagram,
+        backlog_api.get_diagram,
+        backlog_api.get_list_projects,
+        backlog_api.get_projects_tree,
+        backlog_api.get_list_feature_types,
+        backlog_api.create_project,
+        backlog_api.get_story_tree,
+        backlog_api.update_story,
+        backlog_api.refresh_feature_types,
+        backlog_api.add_feature_to_story,
+        backlog_api.add_child_feature,
+        backlog_api.adopt_child_feature,
+        backlog_api.add_actor,
+        backlog_api.add_story_to_actor,
+        backlog_api.normalize_tasks,
+        backlog_api.get_diagram_definition,
+        backlog_api.update_diagram_definition
+    ]
+
+    system_instructions = """
+        Tu es un assistant Business Analyst, ton rôle est d'expliquer les besoins métiers, les besoins utilisateurs et les éléments techniques de façon claire et concise.
+    """
+
+    project_id = os.getenv('PROJECT_NAME')
+    vertexai.init(project=project_id, location="europe-west1")
+    return GenerativeModel(
+        "gemini-1.5-flash-001", 
+        # tools=function_tools, 
+        system_instruction=system_instructions)
+
 def access_file(file_path, prompt):
-    # ...existing code...
+    
     try:
-        project_id = os.getenv('PROJECT_NAME')
-        vertexai.init(project=project_id, location="europe-west1")
-        model = GenerativeModel("gemini-1.5-flash-001")
+       
+        model = configure_model()
         
         if file_path:
             contents = [get_file_content(os.getenv("BUCKET_NAME"), file_path), prompt]
@@ -50,7 +88,7 @@ def access_file(file_path, prompt):
         return {"error": f"An error occurred: {e}"}
 
 def chat_with_llm(file_path, chat_history, user_message):
-    # ...existing code...
+    
     """
     Chats with a Large Language Model (LLM), optionally including a PDF context.
 
@@ -72,13 +110,12 @@ def chat_with_llm(file_path, chat_history, user_message):
     project_id = os.getenv('PROJECT_NAME')
     bucket_name = os.getenv("BUCKET_NAME")
     model_name = "gemini-1.5-flash-001"
-    system_instructions = """
-        Tu es un assistant Business Analyst, ton rôle est d'expliquer les besoins métiers, les besoins utilisateurs et les éléments techniques de façon claire et concise.
-    """
+    
     
     try:
-        vertexai.init(project=project_id, location="europe-west1")
-        model = GenerativeModel(model_name, system_instruction=system_instructions)
+        # vertexai.init(project=project_id, location="europe-west1")
+        # model = GenerativeModel(model_name, system_instruction=system_instructions)
+        model = configure_model()
         contents = []
 
         if file_path:
