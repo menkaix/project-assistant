@@ -33,41 +33,22 @@ def get_file_content(bucket_name, file_path):
         raise
 
 def configure_model():
-    # array of functions to be used in the model
-    function_tools = [
-        backlog_api.create_diagram,
-        backlog_api.get_list_diagrams,
-        backlog_api.update_diagram_graphic,
-        backlog_api.update_diagram,
-        backlog_api.get_png_diagram,
-        backlog_api.get_plant_url_diagram,
-        backlog_api.get_diagram,
-        backlog_api.get_list_projects,
-        backlog_api.get_projects_tree,
-        backlog_api.get_list_feature_types,
-        backlog_api.create_project,
-        backlog_api.get_story_tree,
-        backlog_api.update_story,
-        backlog_api.refresh_feature_types,
-        backlog_api.add_feature_to_story,
-        backlog_api.add_child_feature,
-        backlog_api.adopt_child_feature,
-        backlog_api.add_actor,
-        backlog_api.add_story_to_actor,
-        backlog_api.normalize_tasks,
-        backlog_api.get_diagram_definition,
-        backlog_api.update_diagram_definition
-    ]
-
+    
     system_instructions = """
         Tu es un assistant Business Analyst, ton rôle est d'expliquer les besoins métiers, les besoins utilisateurs et les éléments techniques de façon claire et concise.
     """
-
+    # model_name = "gemini-1.5-flash-001"
+    # region = "europe-west1"
+    model_name = "gemini-2.0-flash-exp"
+    region = "us-central1"
+    
     project_id = os.getenv('PROJECT_NAME')
-    vertexai.init(project=project_id, location="europe-west1")
+
+
+    # Initialize Vertex AI
+    vertexai.init(project=project_id, location=region)
     return GenerativeModel(
-        "gemini-1.5-flash-001", 
-        # tools=function_tools, 
+        model_name, 
         system_instruction=system_instructions)
 
 def access_file(file_path, prompt):
@@ -107,11 +88,8 @@ def chat_with_llm(file_path, chat_history, user_message):
 
     """
 
-    project_id = os.getenv('PROJECT_NAME')
     bucket_name = os.getenv("BUCKET_NAME")
-    model_name = "gemini-1.5-flash-001"
-    
-    
+  
     try:
         # vertexai.init(project=project_id, location="europe-west1")
         # model = GenerativeModel(model_name, system_instruction=system_instructions)
