@@ -51,17 +51,26 @@ def configure_model():
         model_name, 
         system_instruction=system_instructions)
 
+def extract_bucket_and_blob(file_path):
+    if file_path.startswith("gs://"):
+        return file_path[5:].split("/", 1)
+    return os.getenv("BUCKET_NAME"), file_path
+
+def prepare_contents(bucket_name, blob_name, prompt=None, chat_history=None):
+    contents = []
+    if blob_name:
+        contents.append(get_file_content(bucket_name, blob_name))
+    if chat_history:
+        contents.append(json.dumps(chat_history))
+    if prompt:
+        contents.append(prompt)
+    return contents
+
 def access_file(file_path, prompt):
-    
     try:
-       
         model = configure_model()
-        
-        if file_path:
-            contents = [get_file_content(os.getenv("BUCKET_NAME"), file_path), prompt]
-        else:
-            contents = [prompt]
-        
+        bucket_name, blob_name = extract_bucket_and_blob(file_path)
+        contents = prepare_contents(bucket_name, blob_name, prompt=prompt)
         response = model.generate_content(contents)
         return response.text
     except Exception as e:
@@ -88,23 +97,10 @@ def chat_with_llm(file_path, chat_history, user_message):
 
     """
 
-    bucket_name = os.getenv("BUCKET_NAME")
-  
     try:
-        # vertexai.init(project=project_id, location="europe-west1")
-        # model = GenerativeModel(model_name, system_instruction=system_instructions)
         model = configure_model()
-        contents = []
-
-        if file_path:
-            try:
-                contents.append(get_file_content(bucket_name, file_path))
-            except Exception as e:
-                return {"error": f"Error reading file: {e}"}
-
-        if chat_history:
-            contents.append(json.dumps(chat_history))
-
+        bucket_name, blob_name = extract_bucket_and_blob(file_path)
+        contents = prepare_contents(bucket_name, blob_name, chat_history=chat_history)
         contents.append(user_message)
         response = model.generate_content(contents)
 
