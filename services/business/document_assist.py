@@ -77,7 +77,7 @@ def access_file(file_path, prompt):
         logger.error(f"Error in access_file: {e}")
         return {"error": f"An error occurred: {e}"}
 
-def chat_with_llm(file_path, chat_history, user_message):
+def chat_with_llm(file_paths, chat_history, user_message):
     
     """
     Chats with a Large Language Model (LLM), optionally including a PDF context.
@@ -98,10 +98,20 @@ def chat_with_llm(file_path, chat_history, user_message):
     """
 
     try:
+
+        contents = []
+
+        # split file_paths on ";" and put the answer in file_paths_array
+        file_paths_array = file_paths.split(";")
+
+        for file_path in file_paths_array :
+
+            bucket_name, blob_name = extract_bucket_and_blob(file_path)
+            contents = prepare_contents(bucket_name, blob_name, chat_history=chat_history)
+            contents.append(user_message)
+
+
         model = configure_model()
-        bucket_name, blob_name = extract_bucket_and_blob(file_path)
-        contents = prepare_contents(bucket_name, blob_name, chat_history=chat_history)
-        contents.append(user_message)
         response = model.generate_content(contents)
 
         assistant_message = {
