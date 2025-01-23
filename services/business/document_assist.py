@@ -87,8 +87,10 @@ def prepare_contents(file_paths, prompt=None, chat_history=None):
         for file_path in file_paths_array :
             
             bucket_name, blob_name = extract_bucket_and_blob(file_path.strip())
-            contents.append(os.path.basename(blob_name))
-            contents.append(get_file_content(bucket_name, blob_name))
+            data = get_file_content(bucket_name, blob_name) 
+            if data:
+                contents.append(os.path.basename(blob_name))
+                contents.append(data)
 
     if chat_history:
         contents.append(json.dumps(chat_history))
