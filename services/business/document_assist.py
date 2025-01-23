@@ -12,12 +12,28 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 def get_file_content(bucket_name, file_path):
-    
+    """
+    Retrieves the content of a file from Google Cloud Storage and processes it based on its MIME type.
+
+    Args:
+        bucket_name (str): The name of the Google Cloud Storage bucket.
+        file_path (str): The path to the file within the bucket.
+
+    Returns:
+        str or Part: The processed content of the file. The type of the return value depends on the MIME type of the file.
+
+    Raises:
+        Exception: If there is an error reading the file.
+    """
     try:
+        # Read the binary data from the specified bucket and file path
         data = gs.read_binary(bucket_name, file_path)
+        
+        # Guess the MIME type of the file
         mime_type, _ = guess_type(file_path)
         
-        if mime_type in ["application/pdf"]:
+        # Process the file content based on its MIME type
+        if mime_type == "application/pdf":
             return Part.from_data(data, mime_type=mime_type)
         elif mime_type == "application/json":
             json_data = json.loads(data)
@@ -25,10 +41,12 @@ def get_file_content(bucket_name, file_path):
         elif mime_type in ["application/xml", "text/xml"]:
             return data.decode('utf-8')
         elif mime_type in ["application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+            # Currently not processing Word documents
             return None
         elif mime_type in ["image/png", "image/jpeg", "image/gif"]:
             return Part.from_data(data, mime_type=mime_type)
         else:
+            # Default case for other text-based files
             return data.decode('utf-8')
     except Exception as e:
         logger.error(f"Error reading file: {e}")
@@ -58,10 +76,20 @@ def extract_bucket_and_blob(file_path):
         return file_path[5:].split("/", 1)
     return os.getenv("BUCKET_NAME"), file_path
 
-def prepare_contents(bucket_name, blob_name, prompt=None, chat_history=None):
+def prepare_contents(file_paths, prompt=None, chat_history=None):
+    
     contents = []
-    if blob_name:
-        contents.append(get_file_content(bucket_name, blob_name))
+
+    if file_paths :
+        
+        file_paths_array = file_paths.split(";")
+
+        for file_path in file_paths_array :
+            
+            bucket_name, blob_name = extract_bucket_and_blob(file_path.strip())
+            contents.append(os.path.basename(blob_name))
+            contents.append(get_file_content(bucket_name, blob_name))
+
     if chat_history:
         contents.append(json.dumps(chat_history))
     if prompt:
@@ -71,8 +99,8 @@ def prepare_contents(bucket_name, blob_name, prompt=None, chat_history=None):
 def access_file(file_path, prompt):
     try:
         model = configure_model()
-        bucket_name, blob_name = extract_bucket_and_blob(file_path)
-        contents = prepare_contents(bucket_name, blob_name, prompt=prompt)
+        # bucket_name, blob_name = extract_bucket_and_blob(file_path)
+        contents = prepare_contents(file_path, prompt=prompt)
         response = model.generate_content(contents)
         return response.text
     except Exception as e:
@@ -101,16 +129,9 @@ def chat_with_llm(file_paths, chat_history, user_message):
 
     try:
 
-        contents = []
+        contents = prepare_contents(file_paths, chat_history=chat_history)
 
-        # split file_paths on ";" and put the answer in file_paths_array
-        file_paths_array = file_paths.split(";")
-
-        for file_path in file_paths_array :
-
-            bucket_name, blob_name = extract_bucket_and_blob(file_path.strip())
-            contents = prepare_contents(bucket_name, blob_name, chat_history=chat_history)
-            contents.append(user_message)
+        contents.append(user_message)
 
         model = configure_model()
         response = model.generate_content(contents)
