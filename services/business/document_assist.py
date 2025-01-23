@@ -106,7 +106,7 @@ def chat_with_llm(file_paths, chat_history, user_message):
 
         for file_path in file_paths_array :
 
-            bucket_name, blob_name = extract_bucket_and_blob(file_path)
+            bucket_name, blob_name = extract_bucket_and_blob(file_path.trim())
             contents = prepare_contents(bucket_name, blob_name, chat_history=chat_history)
             contents.append(user_message)
 
