@@ -17,13 +17,15 @@ def get_file_content(bucket_name, file_path):
         data = gs.read_binary(bucket_name, file_path)
         mime_type, _ = guess_type(file_path)
         
-        if mime_type in ["application/pdf", "application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+        if mime_type in ["application/pdf"]:
             return Part.from_data(data, mime_type=mime_type)
         elif mime_type == "application/json":
             json_data = json.loads(data)
             return json.dumps(json_data, indent=2)
         elif mime_type in ["application/xml", "text/xml"]:
             return data.decode('utf-8')
+        elif mime_type in ["application/msword", "application/vnd.openxmlformats-officedocument.wordprocessingml.document"]:
+            return None
         elif mime_type in ["image/png", "image/jpeg", "image/gif"]:
             return Part.from_data(data, mime_type=mime_type)
         else:
@@ -109,7 +111,6 @@ def chat_with_llm(file_paths, chat_history, user_message):
             bucket_name, blob_name = extract_bucket_and_blob(file_path.strip())
             contents = prepare_contents(bucket_name, blob_name, chat_history=chat_history)
             contents.append(user_message)
-
 
         model = configure_model()
         response = model.generate_content(contents)
